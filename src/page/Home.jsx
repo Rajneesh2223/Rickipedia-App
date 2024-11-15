@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -12,23 +12,7 @@ const Home = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async (page = 1) => {
-      try {
-        const response = await axios.get(
-          `https://rickandmortyapi.com/api/character?page=${page}`
-        );
-        setData(response.data.results);
-        setFilteredData(response.data.results);
-        setTotalPages(Math.ceil(response.data.info.count / 20));
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      }
-    };
-    fetchData(currentPage);
-  }, [currentPage]);
-
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     let newFilteredData = [...data];
 
     if (search.trim() !== "") {
@@ -51,11 +35,27 @@ const Home = () => {
     }
 
     setFilteredData(newFilteredData);
-  };
+  }, [data, search, statusFilter]);
+
+  useEffect(() => {
+    const fetchData = async (page = 1) => {
+      try {
+        const response = await axios.get(
+          `https://rickandmortyapi.com/api/character?page=${page}`
+        );
+        setData(response.data.results);
+        setFilteredData(response.data.results);
+        setTotalPages(Math.ceil(response.data.info.count / 20));
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
+    fetchData(currentPage);
+  }, [currentPage]);
 
   useEffect(() => {
     handleSearch();
-  }, [statusFilter, data]);
+  }, [handleSearch, statusFilter, data]);
 
   const handleSort = () => {
     const sortedData = [...filteredData].sort((a, b) => {
